@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('siniestros', function (Blueprint $table) {
             $table->id();
             $table->string('id_interno')->unique()->description('Identificador por parte de la aseguradora');
-            $table->foreignId('vehiculo_id')->constrained('vehiculo');
+            $table->foreignId('vehiculo_id')->constrained('vehiculos'); // ✔️ correcto
             $table->foreignId('asegurado_id')->constrained('participantes')->description('Asegurado del siniestro');
             $table->foreignId('denunciante_id')->nullable()->constrained('participantes')->description('Denunciante del siniestro');
             $table->foreignId('conductor_id')->constrained('participantes')->description('Conductor del siniestro');

@@ -11,7 +11,7 @@ services:
             - "*.localhost:host-gateway"
         ports:
             #- '${APP_PORT:-8080}:80'
-            - '8000:8000'
+            - '${APP_PORT:-8080}:80'
             - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
         environment:
             WWWUSER: '${WWWUSER}'

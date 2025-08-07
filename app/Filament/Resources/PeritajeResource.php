@@ -53,8 +53,11 @@ class PeritajeResource extends Resource
                 TextColumn::make('solicitante')->label('Solicitante')->sortable()->searchable(),
                 TextColumn::make('siniestro.id_interno')->label('ID Siniestro')->sortable(),
                 TextColumn::make('perito.nombre')->label('Perito')->sortable(),
-                DateColumn::make('fecha_sinis')->label('Fecha Siniestro')->sortable(),
-            ])
+                Tables\Columns\TextColumn::make('fecha_sinis')
+                ->label('Fecha Siniestro')
+                ->date()
+                ->sortable(),
+                        ])
             ->filters([
                 // puedes agregar filtros si es necesario
             ])

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
+use Filament\Tables\Columns\TextColumn;
 
 use App\Filament\Resources\VehiculoResource\Pages;
 use App\Filament\Resources\VehiculoResource\RelationManagers;
@@ -54,7 +55,9 @@ class VehiculoResource extends Resource
     {
         return $table
             ->columns([
-                //
+            TextColumn::make('patente')->label('Patente')->sortable()->searchable(),
+            TextColumn::make('marca')->label('Marca')->sortable(),
+            TextColumn::make('modelo')->label('Modelo')->sortable(),
             ])
             ->filters([
                 //

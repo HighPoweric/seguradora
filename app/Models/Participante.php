@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Participante extends Model
 {
-    // Campos que se pueden asignar masivamente
+    // Habilitar asignación masiva para estos campos
     protected $fillable = [
         'rut',
         'dv',
@@ -18,9 +18,15 @@ class Participante extends Model
         'licencia_conducir',
     ];
 
+    // Si deseas ocultar campos en arrays o respuestas JSON (opcional)
+    // protected $hidden = [];
+
+    // Si deseas agregar atributos virtuales como "nombre_completo"
+    protected $appends = ['nombre_completo'];
+
     /**
-     * Relación con otros modelos si es necesario.
-     * Puedes eliminar este método si no tienes relación aún.
+     * Relación con peritajes (si corresponde)
+     * Este método puedes eliminarlo si no usas esta relación
      */
     public function peritajes(): HasMany
     {
@@ -28,7 +34,8 @@ class Participante extends Model
     }
 
     /**
-     * Devuelve el nombre completo (nombre + apellido)
+     * Atributo virtual: nombre completo
+     * Permite usar `$participante->nombre_completo` en las vistas
      */
     public function getNombreCompletoAttribute(): string
     {

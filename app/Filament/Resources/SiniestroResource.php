@@ -3,15 +3,19 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\SiniestroResource\Pages;
-use App\Filament\Resources\SiniestroResource\RelationManagers;
 use App\Models\Siniestro;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\TimePicker;
+use Filament\Forms\Components\Toggle;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\BadgeColumn;
 
 class SiniestroResource extends Resource
 {
@@ -22,92 +26,71 @@ class SiniestroResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            \Filament\Forms\Components\TextInput::make('id_interno')
-                ->label('ID Interno')
-                ->required()
-                ->unique(ignoreRecord: true),
+            TextInput::make('id_interno')->required()->unique(ignoreRecord: true),
 
-            \Filament\Forms\Components\Select::make('vehiculo_id')
-                ->label('Vehículo')
-                ->relationship('vehiculo', 'patente')
-                ->searchable()
-                ->required(),
+            DatePicker::make('fecha_siniestro')->required(),
+            TimePicker::make('hora_siniestro')->required(),
 
-            \Filament\Forms\Components\Select::make('asegurado_id')
-                ->label('Asegurado')
-                ->relationship('asegurado', 'nombre')
-                ->searchable()
-                ->required(),
+            TextInput::make('comuna')->required(),
+            TextInput::make('ciudad')->required(),
+            TextInput::make('region')->required(),
 
-            \Filament\Forms\Components\Select::make('denunciante_id')
-                ->label('Denunciante')
-                ->relationship('denunciante', 'nombre')
-                ->searchable()
-                ->nullable(),
+            Toggle::make('policia_presente')->label('Policía presente'),
+            Toggle::make('alcolemia_realizada')->label('Alcoholemia realizada'),
+            Toggle::make('vehiculo_inmovilizado')->label('Vehículo inmovilizado'),
 
-            \Filament\Forms\Components\Select::make('conductor_id')
-                ->label('Conductor')
-                ->relationship('conductor', 'nombre')
-                ->searchable()
-                ->required(),
+            TextInput::make('vehiculo_id')->required()->numeric(),
+            TextInput::make('asegurado_id')->required()->numeric(),
+            TextInput::make('denunciante_id')->nullable()->numeric(),
+            TextInput::make('conductor_id')->required()->numeric(),
+            TextInput::make('contratante_id')->nullable()->numeric(),
 
-            \Filament\Forms\Components\Select::make('contratante_id')
-                ->label('Contratante')
-                ->relationship('contratante', 'nombre')
-                ->searchable()
-                ->nullable(),
+            TextInput::make('relacion_asegurado_conductor')->required(),
+            TextInput::make('direccion_informada')->required(),
+            TextInput::make('direccion_aproximada')->required(),
 
-            \Filament\Forms\Components\TextInput::make('relacion_asegurado_conductor')
-                ->label('Relación asegurado/conductor')
-                ->required(),
+            TextInput::make('latitud')->required()->numeric(),
+            TextInput::make('longitud')->required()->numeric(),
 
-            \Filament\Forms\Components\TextInput::make('direccion_aproximada')
-                ->label('Dirección aproximada')
-                ->required(),
-
-            \Filament\Forms\Components\TextInput::make('latitud')
-                ->numeric()
-                ->required(),
-
-            \Filament\Forms\Components\TextInput::make('longitud')
-                ->numeric()
-                ->required(),
-
-            \Filament\Forms\Components\Select::make('status')
-                ->options([
-                    'pendiente' => 'Pendiente',
-                    'investigacion' => 'Investigación',
-                    'completado' => 'Completado',
-                ])
-                ->required(),
+            Select::make('status')->options([
+                'pendiente' => 'Pendiente',
+                'investigacion' => 'Investigación',
+                'completado' => 'Completado',
+            ])->required(),
         ]);
     }
-
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                //
+                TextColumn::make('id_interno')->searchable()->sortable(),
+                TextColumn::make('fecha_siniestro')->date(),
+                TextColumn::make('hora_siniestro')->time(),
+                TextColumn::make('comuna')->searchable(),
+                TextColumn::make('region')->searchable(),
+                TextColumn::make('vehiculo_id')->label('Vehículo ID'),
+                TextColumn::make('asegurado_id')->label('Asegurado ID'),
+                BadgeColumn::make('status')
+                    ->colors([
+                        'primary' => 'pendiente',
+                        'warning' => 'investigacion',
+                        'success' => 'completado',
+                    ]),
+                TextColumn::make('created_at')->dateTime('d-m-Y H:i')->label('Creado'),
             ])
-            ->filters([
-                //
-            ])
+            ->filters([])
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                Tables\Actions\DeleteBulkAction::make(),
             ]);
     }
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array

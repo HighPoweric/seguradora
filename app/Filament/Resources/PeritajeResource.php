@@ -32,12 +32,14 @@ class PeritajeResource extends Resource
                 ->label('Siniestro')
                 ->relationship('siniestro', 'id_interno')
                 ->searchable()
+                ->preload()
                 ->required(),
 
             Select::make('perito_id')
                 ->label('Perito')
                 ->relationship('perito', 'nombre')
                 ->searchable()
+                ->preload()
                 ->required(),
 
             DatePicker::make('fecha_sinis')
@@ -45,6 +47,7 @@ class PeritajeResource extends Resource
                 ->required(),
         ]);
     }
+
 
     public static function table(Table $table): Table
     {

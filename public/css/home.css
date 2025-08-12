@@ -1,0 +1,149 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --primary: #1e3a8a;
+    --primary-dark: #0f2a66;
+    --secondary: #0f172a;
+    --accent: #3b82f6;
+    --light: #f8fafc;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f9fafb;
+    color: var(--secondary);
+    scroll-behavior: smooth;
+}
+
+.hero-gradient {
+    background: linear-gradient(135deg, #f0f4ff 0%, #e6f7ff 100%);
+}
+
+.feature-card {
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+}
+
+.stat-card {
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: scale(1.03);
+}
+
+.login-modal {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+section {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    visibility: visible !important;
+    display: block !important;
+}
+
+main, header, footer {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+}
+
+.max-w-7xl, .container {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.fade-in {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    visibility: visible !important;
+}
+
+/* Animación solo cuando se aplica dinámicamente (desactivada por ahora) */
+.fade-in-animate {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(10px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--primary);
+    color: white;
+    border-radius: 50%;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+/* Cloak utility for Alpine.js */
+[x-cloak] { 
+    display: none !important; 
+}
+
+/* Mejoras adicionales */
+.hero-gradient {
+    position: relative;
+}
+
+.hero-gradient::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23e6f7ff" fill-opacity="0.3"><circle cx="30" cy="30" r="2"/></g></svg>');
+    pointer-events: none;
+}
+
+/* Animaciones finas */
+.feature-card:hover .bg-blue-50 {
+    background-color: var(--primary);
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover .text-blue-900 {
+    color: white;
+    transition: all 0.3s ease;
+}
+
+/* Responsive mejoras */
+@media (max-width: 768px) {
+    .step-number {
+        width: 35px;
+        height: 35px;
+        font-size: 14px;
+    }
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Focus states mejorados */
+input:focus,
+button:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}

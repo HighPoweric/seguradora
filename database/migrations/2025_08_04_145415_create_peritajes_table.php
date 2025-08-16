@@ -26,6 +26,10 @@
          */
         public function down(): void
         {
+            Schema::table('peritajes', function (Blueprint $table) {
+                $table->dropForeign(['siniestro_id']);
+                $table->dropForeign(['perito_id']);
+            });
             Schema::dropIfExists('peritajes');
         }
     };

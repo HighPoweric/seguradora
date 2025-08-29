@@ -26,10 +26,21 @@ class SiniestroResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            TextInput::make('id_interno')->required()->unique(ignoreRecord: true),
+            TextInput::make('id_interno')
+            ->label('N° interno')
+            ->required()
+            ->unique(ignoreRecord: true)
+            ->default(fn () => (string) (((int) (\App\Models\Siniestro::max('id_interno') ?? 0)) + 1))
+            ->disabledOn('edit'),
 
-            DatePicker::make('fecha_siniestro')->required(),
-            TimePicker::make('hora_siniestro')->required(),
+
+            DatePicker::make('fecha_siniestro')
+                ->label('Fecha siniestro')
+                ->required(),
+
+            TimePicker::make('hora_siniestro')
+                ->label('Hora siniestro')
+                ->required(),
 
             TextInput::make('comuna')->required(),
             TextInput::make('ciudad')->required(),
@@ -39,45 +50,109 @@ class SiniestroResource extends Resource
             Toggle::make('alcolemia_realizada')->label('Alcoholemia realizada'),
             Toggle::make('vehiculo_inmovilizado')->label('Vehículo inmovilizado'),
 
-            TextInput::make('vehiculo_id')->required()->numeric(),
-            TextInput::make('asegurado_id')->required()->numeric(),
-            TextInput::make('denunciante_id')->nullable()->numeric(),
-            TextInput::make('conductor_id')->required()->numeric(),
-            TextInput::make('contratante_id')->nullable()->numeric(),
+            Select::make('vehiculo_id')
+                ->label('Vehículo')
+                ->relationship('vehiculo', 'patente')
+                ->required()
+                ->searchable()
+                ->preload()
+                ->native(false)
+                ->getOptionLabelFromRecordUsing(
+                    fn ($record) => "{$record->patente} — {$record->marca} {$record->modelo}"
+                ),
 
-            TextInput::make('relacion_asegurado_conductor')->required(),
+            Select::make('asegurado_id')
+                ->label('Asegurado')
+                ->relationship('asegurado', 'nombre')
+                ->required()
+                ->searchable()
+                ->preload()
+                ->native(false)
+                ->getOptionLabelFromRecordUsing(
+                    fn ($record) => trim("{$record->nombre} {$record->apellido}") .
+                        ' — RUT ' . ($record->rut ?? '') . (isset($record->dv) ? "-{$record->dv}" : '')
+                ),
+
+            Select::make('denunciante_id')
+                ->label('Denunciante')
+                ->relationship('denunciante', 'nombre')
+                ->searchable()
+                ->preload()
+                ->native(false)
+                ->getOptionLabelFromRecordUsing(
+                    fn ($record) => trim("{$record->nombre} {$record->apellido}") .
+                        ($record->correo ? " — {$record->correo}" : '')
+                ),
+
+            Select::make('conductor_id')
+                ->label('Conductor')
+                ->relationship('conductor', 'nombre')
+                ->required()
+                ->searchable()
+                ->preload()
+                ->native(false)
+                ->getOptionLabelFromRecordUsing(
+                    fn ($record) => trim("{$record->nombre} {$record->apellido}") .
+                        (isset($record->licencia) ? " — Lic. {$record->licencia}" : '')
+                ),
+
+            Select::make('contratante_id')
+                ->label('Contratante')
+                ->relationship('contratante', 'nombre')
+                ->searchable()
+                ->preload()
+                ->native(false)
+                ->getOptionLabelFromRecordUsing(
+                    fn ($record) => trim("{$record->nombre} {$record->apellido}")
+                ),
+
+            TextInput::make('relacion_asegurado_conductor')
+                ->label('Relación asegurado–conductor')
+                ->required(),
+
             TextInput::make('direccion_informada')->required(),
             TextInput::make('direccion_aproximada')->required(),
 
-            TextInput::make('latitud')->required()->numeric(),
-            TextInput::make('longitud')->required()->numeric(),
+            TextInput::make('latitud')->required(),
+            TextInput::make('longitud')->required(),
 
-            Select::make('status')->options([
-                'pendiente' => 'Pendiente',
-                'investigacion' => 'Investigación',
-                'completado' => 'Completado',
-            ])->required(),
-        ]);
+            Select::make('status')
+                ->label('Status')
+                ->options([
+                    'pendiente'     => 'Pendiente',
+                    'investigacion' => 'Investigación',
+                    'completado'    => 'Completado',
+                ])
+                ->required(),
+        ])->columns(2);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('id_interno')->searchable()->sortable(),
-                TextColumn::make('fecha_siniestro')->date(),
-                TextColumn::make('hora_siniestro')->time(),
+                TextColumn::make('id_interno')->label('Id interno')->searchable()->sortable(),
+                TextColumn::make('fecha_siniestro')->label('Fecha')->date(),
+                TextColumn::make('hora_siniestro')->label('Hora')->time(),
                 TextColumn::make('comuna')->searchable(),
                 TextColumn::make('region')->searchable(),
-                TextColumn::make('vehiculo_id')->label('Vehículo ID'),
-                TextColumn::make('asegurado_id')->label('Asegurado ID'),
+
+                TextColumn::make('vehiculo.patente')->label('Patente')->searchable()->sortable(),
+                TextColumn::make('asegurado.nombre')->label('Asegurado')->searchable()->sortable(),
+                TextColumn::make('conductor.nombre')->label('Conductor')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('denunciante.nombre')->label('Denunciante')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('contratante.nombre')->label('Contratante')->toggleable(isToggledHiddenByDefault: true),
+
                 BadgeColumn::make('status')
+                    ->label('Estado')
                     ->colors([
-                        'primary' => 'pendiente',
-                        'warning' => 'investigacion',
+                        'warning' => 'pendiente',
+                        'info'    => 'investigacion',
                         'success' => 'completado',
-                    ]),
-                TextColumn::make('created_at')->dateTime('d-m-Y H:i')->label('Creado'),
+                    ])
+                    ->formatStateUsing(fn ($state) => ucfirst($state)),
+
+                TextColumn::make('created_at')->label('Creado')->dateTime('d-m-Y H:i'),
             ])
             ->filters([])
             ->actions([
@@ -96,9 +171,9 @@ class SiniestroResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListSiniestros::route('/'),
+            'index'  => Pages\ListSiniestros::route('/'),
             'create' => Pages\CreateSiniestro::route('/create'),
-            'edit' => Pages\EditSiniestro::route('/{record}/edit'),
+            'edit'   => Pages\EditSiniestro::route('/{record}/edit'),
         ];
     }
 }

@@ -6,9 +6,22 @@
         Simplifica el proceso de gestión de siniestros con nuestra plataforma integral. Carga documentación, sube grabaciones, revisa estados y genera informes automatizados para tu aseguradora.
     </p>
     <div class="flex flex-col sm:flex-row justify-center lg:justify-start space-y-4 sm:space-y-0 sm:space-x-4">
-        <button @click="loginModalOpen = true" class="bg-blue-900 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-800 transition-colors shadow-lg">
-            Iniciar Sesión
+        @guest
+        <button
+        @click="loginModalOpen = true"
+        class="bg-blue-900 text-white px-5 py-2 rounded-lg hover:bg-blue-800 transition-colors">
+        Iniciar Sesión
         </button>
+        @endguest
+
+        {{-- Si SÍ está logeado --}}
+        @auth
+        <a
+        href="{{ route('dashboard') }}"
+        class="bg-blue-900 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-800 transition-colors shadow-lg">
+        Mi Panel
+        </a>
+        @endauth
         <a href="#features" class="bg-white border border-gray-200 text-gray-800 px-8 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors text-center">
             Ver características
         </a>

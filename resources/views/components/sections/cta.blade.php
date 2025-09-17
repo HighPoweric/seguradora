@@ -13,7 +13,7 @@
             @endguest
             @auth
             <a
-            href="{{ route('dashboard') }}"
+            href="{{ route('dashboard.index') }}"
             class="bg-white text-blue-900 px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors">
             Mi Panel
             </a>

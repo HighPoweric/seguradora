@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\ParticipanteController;
 
 
 Route::get('/', function () {
@@ -14,25 +15,51 @@ Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Rutas del dashboard y módulos principales
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware('auth')->name('dashboard');
+Route::middleware('auth')->group(function () {
 
-Route::get('/caso', function () {
-    return view('caso');
-})->middleware('auth')->name('caso');
+    // Dashboard
+    Route::get('/dashboard', function () {
+        return view('dashboard.index');
+    })->name('dashboard.index');
 
-Route::get('/documents', function () {
-    return view('documents');
-})->middleware('auth')->name('documents');
+    // Casos (asignados al perito)
+    Route::get('/casos', function () {
+        return view('casos.index');
+    })->name('casos.index');
 
-Route::get('/perito', function () {
-    return view('perito');
-})->middleware('auth')->name('perito');
+    // Siniestros (hecho objetivo del accidente)
+    Route::get('/siniestros', function () {
+        return view('siniestros.index');
+    })->name('siniestros.index');
 
-Route::get('/interviews', function () {
-    return view('interviews');
-})->middleware('auth')->name('interviews');
+    // Participantes (personas involucradas)
+    Route::resource('participantes', ParticipanteController::class);
+
+    // Vehículos
+    Route::get('/vehiculos', function () {
+        return view('vehiculos.index');
+    })->name('vehiculos.index');
+
+    // Entrevistas / Agenda
+    Route::get('/entrevistas', function () {
+        return view('entrevistas.index');
+    })->name('entrevistas.index');
+
+    // Documentos de los casos
+    Route::get('/documentos', function () {
+        return view('documentos.index');
+    })->name('documentos.index');
+
+    // Reportes (opcional, para dashboards más analíticos)
+    Route::get('/reportes', function () {
+        return view('reportes.index');
+    })->name('reportes.index');
+
+    // Configuración (parámetros de la app / perfil del perito)
+    Route::get('/configuracion', function () {
+        return view('configuracion.index');
+    })->name('configuracion.index');
+});
 
 // Si necesitas rutas con parámetros o recursos:
 // Route::resource('participants', ParticipantController::class);

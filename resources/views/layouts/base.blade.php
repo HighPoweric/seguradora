@@ -51,33 +51,88 @@
                 </div>
                 
                 <!-- Navigation -->
-                <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-                    <a href="{{ route('dashboard') }}" class="sidebar-item flex items-center px-4 py-3 text-sm font-medium rounded-md {{ Request::is('dashboard') ? 'active text-primary-700' : 'text-primary-100 hover:text-gray-900' }}">
-                        <i class="fas fa-tachometer-alt w-5 mr-3 text-center"></i>
+                <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto text-sm">
+
+                    <!-- ===== Trabajo del Perito (principal) ===== -->
+                    <div class="px-4 pt-2 pb-1 text-xs font-semibold uppercase tracking-wider text-primary-50">
+                        Trabajo
+                    </div>
+
+                    <!-- Dashboard -->
+                    <a href="{{ route('dashboard.index') }}"
+                        class="sidebar-item flex items-center px-4 py-3 font-medium rounded-md {{ Request::is('dashboard*') ? 'active text-primary-700' : 'text-primary-100 hover:text-gray-900' }}">
+                        <i class="fas fa-gauge w-5 mr-3 text-center"></i>
                         <span>Dashboard</span>
                     </a>
-                    
-                    <a href="{{ route('caso') }}" class="sidebar-item flex items-center px-4 py-3 text-sm font-medium rounded-md {{ Request::is('caso*') ? 'active text-primary-700' : 'text-primary-100 hover:text-gray-900' }}">
-                        <i class="fas fa-users w-5 mr-3 text-center"></i>
-                        <span>Mi Caso</span>
+
+                    <!-- Mis Casos -->
+                    <a href="{{ route('casos.index') }}"
+                        class="sidebar-item flex items-center px-4 py-3 font-medium rounded-md {{ Request::is('casos*') ? 'active text-primary-700' : 'text-primary-100 hover:text-gray-900' }}">
+                        <i class="fas fa-briefcase w-5 mr-3 text-center"></i>
+                        <span>Mis Casos</span>
                     </a>
 
-                    <a href="{{ route('documents') }}" class="sidebar-item flex items-center px-4 py-3 text-sm font-medium rounded-md {{ Request::is('documents*') ? 'active text-primary-700' : 'text-primary-100 hover:text-gray-900' }}">
-                        <i class="fas fa-file-alt w-5 mr-3 text-center"></i>
+                    <!-- Entrevistas / Agenda -->
+                    <a href="{{ route('entrevistas.index') }}"
+                        class="sidebar-item flex items-center px-4 py-3 font-medium rounded-md {{ Request::is('entrevistas*') ? 'active text-primary-700' : 'text-primary-100 hover:text-gray-900' }}">
+                        <i class="fas fa-calendar-check w-5 mr-3 text-center"></i>
+                        <span>Entrevistas / Agenda</span>
+                    </a>
+
+                    <!-- Documentos -->
+                    <a href="{{ route('documentos.index') }}"
+                        class="sidebar-item flex items-center px-4 py-3 font-medium rounded-md {{ Request::is('documentos*') ? 'active text-primary-700' : 'text-primary-100 hover:text-gray-900' }}">
+                        <i class="fas fa-folder-open w-5 mr-3 text-center"></i>
                         <span>Documentos</span>
                     </a>
 
-                    <a href="{{ route('perito') }}" class="sidebar-item flex items-center px-4 py-3 text-sm font-medium rounded-md {{ Request::is('perito*') ? 'active text-primary-700' : 'text-primary-100 hover:text-gray-900' }}">
-                        <i class="fas fa-user-tie w-5 mr-3 text-center"></i>
-                        <span>Mi Perito</span>
+                    <!-- ===== Registros del Siniestro ===== -->
+                    <div class="px-4 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-primary-50">
+                        Registros
+                    </div>
+
+                    <!-- Siniestros -->
+                    <a href="{{ route('siniestros.index') }}"
+                        class="sidebar-item flex items-center px-4 py-3 font-medium rounded-md {{ Request::is('siniestros*') ? 'active text-primary-700' : 'text-primary-100 hover:text-gray-900' }}">
+                        <i class="fas fa-triangle-exclamation w-5 mr-3 text-center"></i>
+                        <span>Siniestros</span>
                     </a>
-                    
-                    <a href="{{ route('interviews') }}" class="sidebar-item flex items-center px-4 py-3 text-sm font-medium rounded-md {{ Request::is('interviews*') ? 'active text-primary-700' : 'text-primary-100 hover:text-gray-900' }}">
-                        <i class="fas fa-calendar-check w-5 mr-3 text-center"></i>
-                        <span>Entrevistas</span>
+
+                    <!-- Participantes -->
+                    <a href="{{ route('participantes.index') }}"
+                        class="sidebar-item flex items-center px-4 py-3 font-medium rounded-md {{ Request::is('participantes*') ? 'active text-primary-700' : 'text-primary-100 hover:text-gray-900' }}">
+                        <i class="fas fa-user-group w-5 mr-3 text-center"></i>
+                        <span>Participantes</span>
                     </a>
-                    
+
+                    <!-- Vehículos -->
+                    <a href="{{ route('vehiculos.index') }}"
+                        class="sidebar-item flex items-center px-4 py-3 font-medium rounded-md {{ Request::is('vehiculos*') ? 'active text-primary-700' : 'text-primary-100 hover:text-gray-900' }}">
+                        <i class="fas fa-car-side w-5 mr-3 text-center"></i>
+                        <span>Vehículos</span>
+                    </a>
+
+                    <!-- ===== Gestión / Reportes ===== -->
+                    <div class="px-4 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-primary-50">
+                        Gestión
+                    </div>
+
+                    <!-- Reportes -->
+                    <a href="{{ route('reportes.index') }}"
+                        class="sidebar-item flex items-center px-4 py-3 font-medium rounded-md {{ Request::is('reportes*') ? 'active text-primary-700' : 'text-primary-100 hover:text-gray-900' }}">
+                        <i class="fas fa-chart-line w-5 mr-3 text-center"></i>
+                        <span>Reportes</span>
+                    </a>
+
+                    <!-- Configuración -->
+                    <a href="{{ route('configuracion.index') }}"
+                        class="sidebar-item flex items-center px-4 py-3 font-medium rounded-md {{ Request::is('configuracion*') ? 'active text-primary-700' : 'text-primary-100 hover:text-gray-900' }}">
+                        <i class="fas fa-gear w-5 mr-3 text-center"></i>
+                        <span>Configuración</span>
+                    </a>
+
                 </nav>
+
                 
                 <!-- User section -->
                 <div class="px-4 py-4  border-gray-200">
@@ -159,6 +214,29 @@
 
             <!-- Page content -->
             <main class="flex-grow px-4 sm:px-6 lg:px-8 py-8 bg-[#3B4252]">
+                <!-- Flash Messages -->
+                @if (session('success'))
+                    <div class="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                        <span class="block sm:inline">{{ session('success') }}</span>
+                        <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+                            <svg onclick="this.parentElement.parentElement.style.display='none'" class="fill-current h-6 w-6 text-green-500 cursor-pointer" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+                            </svg>
+                        </span>
+                    </div>
+                @endif
+
+                @if (session('error'))
+                    <div class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                        <span class="block sm:inline">{{ session('error') }}</span>
+                        <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+                            <svg onclick="this.parentElement.parentElement.style.display='none'" class="fill-current h-6 w-6 text-red-500 cursor-pointer" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+                            </svg>
+                        </span>
+                    </div>
+                @endif
+
                 @yield('content')
             </main>
 

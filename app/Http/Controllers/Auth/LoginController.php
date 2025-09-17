@@ -44,8 +44,8 @@ class LoginController extends Controller
             return response()->json([
                 'success'  => true,
                 'redirect' => url()->previous() === url()->current()
-                    ? route('dashboard')
-                    : redirect()->intended(route('dashboard'))->getTargetUrl(),
+                    ? route('dashboard.index')
+                    : redirect()->intended(route('dashboard.index'))->getTargetUrl(),
             ], 200);
         }
 

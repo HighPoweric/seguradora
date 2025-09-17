@@ -17,7 +17,7 @@
         {{-- Si SÍ está logeado --}}
         @auth
         <a
-        href="{{ route('dashboard') }}"
+        href="{{ route('dashboard.index') }}"
         class="bg-blue-900 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-800 transition-colors shadow-lg">
         Mi Panel
         </a>

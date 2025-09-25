@@ -16,7 +16,7 @@
                 $table->string('solicitante')->description('Nombre del solicitante del peritaje');
                 $table->foreignId('siniestro_id')->constrained('siniestros');
                 $table->foreignId('perito_id')->constrained('peritos');
-                $table->date('fecha_sinis');
+                $table->date('fecha_siniestro');
                 $table->timestamps();
             });
         }

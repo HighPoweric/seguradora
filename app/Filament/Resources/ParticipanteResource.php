@@ -22,42 +22,7 @@ class ParticipanteResource extends Resource
 
     public static function form(Form $form): Form
     {
-        return $form->schema([
-            Forms\Components\TextInput::make('rut')
-                ->label('RUT')
-                ->required()
-                ->maxLength(10)
-                ->unique(ignoreRecord: true),
-
-            Forms\Components\TextInput::make('dv')
-                ->label('Dígito Verificador')
-                ->required()
-                ->maxLength(1),
-
-            Forms\Components\TextInput::make('nombre')
-                ->label('Nombre')
-                ->required()
-                ->maxLength(255),
-
-            Forms\Components\TextInput::make('apellido')
-                ->label('Apellido')
-                ->required()
-                ->maxLength(255),
-
-            Forms\Components\TextInput::make('telefono')
-                ->label('Teléfono')
-                ->tel()
-                ->maxLength(20),
-
-            Forms\Components\TextInput::make('email')
-                ->label('Correo Electrónico')
-                ->email()
-                ->maxLength(255),
-
-            Forms\Components\TextInput::make('licencia_conducir')
-                ->label('Licencia de Conducir')
-                ->maxLength(255),
-        ]);
+        return $form->schema(Participante::getFormSchema());
     }
 
     public static function table(Table $table): Table

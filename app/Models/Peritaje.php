@@ -12,7 +12,7 @@ class Peritaje extends Model
         'solicitante',
         'siniestro_id',
         'perito_id',
-        'fecha_sinis',
+        'fecha_siniestro',
     ];
 
     protected $casts = [

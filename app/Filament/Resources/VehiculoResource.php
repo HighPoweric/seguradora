@@ -25,29 +25,7 @@ class VehiculoResource extends Resource
 
     public static function form(Form $form): Form
     {
-        return $form->schema([
-            TextInput::make('patente')
-                ->label('Patente')
-                ->required()
-                ->unique(ignoreRecord: true),
-
-            Select::make('tipo')
-                ->label('Tipo de Vehículo')
-                ->options([
-                    'auto' => 'Auto',
-                    'camioneta' => 'Camioneta',
-                    'moto' => 'Moto',
-                ])
-                ->required(),
-
-            TextInput::make('marca')
-                ->label('Marca')
-                ->required(),
-
-            TextInput::make('modelo')
-                ->label('Modelo')
-                ->required(),
-        ]);
+        return $form->schema(Vehiculo::getFormSchema());
     }
 
 

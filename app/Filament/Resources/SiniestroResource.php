@@ -4,7 +4,15 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\SiniestroResource\Pages;
 use App\Models\Siniestro;
+
+use App\Filament\Resources\SiniestroResource\RelationManagers;
+use App\Models\Vehiculo;
+use App\Models\Participante;
 use Filament\Forms;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
+use Filament\Forms\Components\Actions\Action;
+
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -57,6 +65,17 @@ class SiniestroResource extends Resource
                 ->searchable()
                 ->preload()
                 ->native(false)
+                ->suffixAction(
+                    Action::make('createVehiculo')
+                        ->label('Agregar vehículo')
+                        ->icon('heroicon-o-plus')
+                        ->form(Vehiculo::getFormSchema())
+                        ->action(function (array $data, Set $set) {
+                            $vehiculo = Vehiculo::create($data);
+                            $set('vehiculo_id', $vehiculo->id);
+                        })
+
+                )
                 ->getOptionLabelFromRecordUsing(
                     fn ($record) => "{$record->patente} — {$record->marca} {$record->modelo}"
                 ),
@@ -68,6 +87,17 @@ class SiniestroResource extends Resource
                 ->searchable()
                 ->preload()
                 ->native(false)
+                ->suffixAction(
+                    Action::make('createParticipante')
+                        ->label('Agregar participante')
+                        ->icon('heroicon-o-plus')
+                        ->form(Participante::getFormSchema())
+                        ->action(function (array $data, Set $set) {
+                            $participante = Participante::create($data);
+                            $set('asegurado_id', $participante->id);
+                        })
+
+                )
                 ->getOptionLabelFromRecordUsing(
                     fn ($record) => trim("{$record->nombre} {$record->apellido}") .
                         ' — RUT ' . ($record->rut ?? '') . (isset($record->dv) ? "-{$record->dv}" : '')
@@ -79,6 +109,17 @@ class SiniestroResource extends Resource
                 ->searchable()
                 ->preload()
                 ->native(false)
+                ->suffixAction(
+                    Action::make('createParticipante')
+                        ->label('Agregar participante')
+                        ->icon('heroicon-o-plus')
+                        ->form(Participante::getFormSchema())
+                        ->action(function (array $data, Set $set) {
+                            $participante = Participante::create($data);
+                            $set('denunciante_id', $participante->id);
+                        })
+
+                )
                 ->getOptionLabelFromRecordUsing(
                     fn ($record) => trim("{$record->nombre} {$record->apellido}") .
                         ($record->correo ? " — {$record->correo}" : '')
@@ -91,6 +132,17 @@ class SiniestroResource extends Resource
                 ->searchable()
                 ->preload()
                 ->native(false)
+                ->suffixAction(
+                    Action::make('createParticipante')
+                        ->label('Agregar participante')
+                        ->icon('heroicon-o-plus')
+                        ->form(Participante::getFormSchema())
+                        ->action(function (array $data, Set $set) {
+                            $participante = Participante::create($data);
+                            $set('conductor_id', $participante->id);
+                        })
+
+                )
                 ->getOptionLabelFromRecordUsing(
                     fn ($record) => trim("{$record->nombre} {$record->apellido}") .
                         (isset($record->licencia) ? " — Lic. {$record->licencia}" : '')
@@ -102,6 +154,17 @@ class SiniestroResource extends Resource
                 ->searchable()
                 ->preload()
                 ->native(false)
+                ->suffixAction(
+                    Action::make('createParticipante')
+                        ->label('Agregar participante')
+                        ->icon('heroicon-o-plus')
+                        ->form(Participante::getFormSchema())
+                        ->action(function (array $data, Set $set) {
+                            $participante = Participante::create($data);
+                            $set('contratante_id', $participante->id);
+                        })
+
+                )
                 ->getOptionLabelFromRecordUsing(
                     fn ($record) => trim("{$record->nombre} {$record->apellido}")
                 ),

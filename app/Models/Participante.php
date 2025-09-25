@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
 
 class Participante extends Model
 {
@@ -29,6 +31,41 @@ class Participante extends Model
         'clase_f' => 'Clase F - Vehículos policiales, bomberos y fuerzas armadas',
     ];
 
+    /**
+     * Devuelve el esquema del formulario para Filament basado en los campos de la migración.
+     */
+    public static function getFormSchema(): array
+    {
+        return [
+            TextInput::make('rut')
+                ->label('RUT')
+                ->required()
+                ->unique()
+                ->maxLength(12),
+            TextInput::make('dv')
+                ->label('Dígito verificador')
+                ->required()
+                ->maxLength(2),
+            TextInput::make('nombre')
+                ->label('Nombre')
+                ->required()
+                ->maxLength(50),
+            TextInput::make('apellido')
+                ->label('Apellido')
+                ->required()
+                ->maxLength(50),
+            TextInput::make('telefono')
+                ->label('Teléfono')
+                ->maxLength(20),
+            TextInput::make('email')
+                ->label('Correo electrónico')
+                ->email()
+                ->maxLength(100),
+            TextInput::make('licencia_conducir')
+                ->label('Licencia de conducir')
+                ->maxLength(30),
+        ];
+    }
     // Habilitar asignación masiva para estos campos
     protected $fillable = [
         'rut',

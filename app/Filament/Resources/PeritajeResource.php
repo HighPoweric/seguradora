@@ -55,7 +55,7 @@ class PeritajeResource extends Resource
                 ->relationship('perito', 'nombre')
                 ->searchable()->preload()->required(),
 
-            DatePicker::make('fecha_sinis')
+            DatePicker::make('fecha_siniestro')
                 ->label('Fecha del Siniestro')
                 ->required()->native(false)->displayFormat('d/m/Y')->closeOnDateSelection(),
         ]);

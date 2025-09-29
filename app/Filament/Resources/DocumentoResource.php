@@ -39,6 +39,7 @@ class DocumentoResource extends Resource
                 ->inline(false)
                 ->default(false),
 
+
             TextInput::make('orden')
                 ->label('Orden')
                 ->numeric()

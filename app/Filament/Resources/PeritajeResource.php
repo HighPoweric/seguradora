@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Filament\Resources;
+use Illuminate\Support\Facades\Schema;
+use App\Models\Documento;
 
 use App\Filament\Resources\PeritajeResource\Pages;
 use App\Models\Peritaje;
@@ -58,6 +60,33 @@ class PeritajeResource extends Resource
             DatePicker::make('fecha_siniestro')
                 ->label('Fecha del Siniestro')
                 ->required()->native(false)->displayFormat('d/m/Y')->closeOnDateSelection(),
+            Select::make('documentos')
+                ->label('Documentos requeridos')
+                ->relationship('documentos', 'nombre')
+                ->multiple()
+                ->preload()
+                ->searchable()
+                ->helperText('Los documentos obligatorios se preseleccionan al crear.')
+                ->afterStateHydrated(function (Select $component, $state, ?\App\Models\Peritaje $record) {
+                    // Solo en CREAR (cuando no existe $record)
+                    if ($record) {
+                        return;
+                    }
+
+                    // Evita error si aún no migras la columna:
+                    if (! Schema::hasColumn('documentos', 'obligatorio')) {
+                        return;
+                    }
+
+                    // IDs de documentos obligatorios:
+                    $ids = Documento::where('obligatorio', true)->pluck('id')->all();
+
+                    // Si el estado viene vacío, pre-cárgalo:
+                    if (empty($state)) {
+                        $component->state($ids);
+                    }
+                }),
+
         ]);
     }
 
@@ -74,7 +103,7 @@ class PeritajeResource extends Resource
                 TextColumn::make('perito.nombre')
                     ->label('Perito')->sortable()->searchable(),
 
-                TextColumn::make('fecha_sinis')
+                TextColumn::make('fecha_siniestro')
                     ->label('Fecha Siniestro')->date('d/m/Y')->sortable(),
 
                 // % avance de tareas (Badge)
@@ -110,7 +139,7 @@ class PeritajeResource extends Resource
             ->filters([
                 Filters\Filter::make('ultimos_30_dias')
                     ->label('Últimos 30 días')
-                    ->query(fn (Builder $query) => $query->whereDate('fecha_sinis', '>=', now()->subDays(30))),
+                    ->query(fn (Builder $query) => $query->whereDate('fecha_siniestro', '>=', now()->subDays(30))),
 
                 Filters\SelectFilter::make('perito_id')
                     ->label('Perito')->relationship('perito', 'nombre'),
@@ -120,14 +149,16 @@ class PeritajeResource extends Resource
             ])
             ->actions([ Actions\EditAction::make() ])
             ->bulkActions([ Actions\BulkActionGroup::make([ Actions\DeleteBulkAction::make() ]) ])
-            ->defaultSort('fecha_sinis', 'desc');
+            ->defaultSort('fecha_siniestro', 'desc');
     }
 
     public static function getRelations(): array
     {
         return [
+            \App\Filament\Resources\PeritajeResource\RelationManagers\DocumentosRelationManager::class, // <-- nuevo
             \App\Filament\Resources\PeritajeResource\RelationManagers\ChecklistDocumentosRelationManager::class,
             \App\Filament\Resources\PeritajeResource\RelationManagers\ChecklistTareasRelationManager::class,
+
         ];
     }
 

@@ -27,6 +27,8 @@ class Siniestro extends Model
         'latitud',
         'longitud',
         'status',
+        'aseguradora',
+
     ];
 
     public function vehiculo()

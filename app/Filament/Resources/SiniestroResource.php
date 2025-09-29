@@ -41,6 +41,11 @@ class SiniestroResource extends Resource
             ->default(fn () => (string) (((int) (\App\Models\Siniestro::max('id_interno') ?? 0)) + 1))
             ->disabledOn('edit'),
 
+            TextInput::make('aseguradora')
+            ->label('Aseguradora')
+            ->maxLength(120)
+            ->placeholder('BCI Seguros / Zenit / Mapfre / …')
+            ->columnSpanFull(),
 
             DatePicker::make('fecha_siniestro')
                 ->label('Fecha siniestro')
@@ -195,6 +200,10 @@ class SiniestroResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('id_interno')->label('Id interno')->searchable()->sortable(),
+                TextColumn::make('aseguradora')
+                    ->label('Aseguradora')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('fecha_siniestro')->label('Fecha')->date(),
                 TextColumn::make('hora_siniestro')->label('Hora')->time(),
                 TextColumn::make('comuna')->searchable(),

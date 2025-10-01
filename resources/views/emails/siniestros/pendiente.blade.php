@@ -1,28 +1,30 @@
-@component('mail::layout')
+@component('mail::message')
+# 📋 LIQUIDACIÓN SINIESTRO {{ $nro }} - {{ $aseguradora }}
 
-{{-- BODY --}}
-# LIQUIDACIÓN SINIESTRO {{ $nro }} {{ $aseguradora }}
+Hola **{{ $destinatario }}**,
 
-Hola {{ $destinatario }},
+Representamos a **{{ $aseguradora }}** para continuar con el proceso de liquidación.
 
-Estamos representando a **{{ $aseguradora }}**, para realizar diligencias propias del proceso de liquidación.
-Para poder continuar requerimos que nos aporte los siguientes documentos *(aunque los haya enviado previamente a la compañía)*:
-
+## Documentos Requeridos
 @forelse ($documentos as $doc)
-- **{{ mb_strtoupper($doc->nombre) }}**@if(!empty($doc->pivot?->observacion)) — {{ $doc->pivot->observacion }} @endif
+- **{{ mb_strtoupper($doc->nombre) }}**
+@if(!empty($doc->pivot?->observacion))
+  - *{{ $doc->pivot->observacion }}*
+@endif
 @empty
-- *(No hay documentos asociados a este peritaje)*
+- *No hay documentos asociados a este peritaje*
 @endforelse
 
-Adicionalmente, debemos realizar una **entrevista** con los involucrados y el asegurado para obtener antecedentes de la liquidación.
-Por favor indíquenos **día y horario** disponible dentro de los próximos **3 días**. Puede ser **llamada, videollamada o por escrito** (WhatsApp).
+## 📅 Entrevista Requerida
+Necesitamos realizar una **entrevista** con los involucrados.
+Por favor indique **día y horario** disponible dentro de los próximos **3 días**.
+
+**Modalidades disponibles:** Llamada, Videollamada o WhatsApp
 
 @component('mail::button', ['url' => $urlDetalle])
-Ver detalle del siniestro
+Ver Detalle del Siniestro
 @endcomponent
 
-{{-- FOOTER opcional --}}
-@slot('footer')
-@endslot
-
+Saludos cordiales,
+**Equipo de Liquidaciones**
 @endcomponent

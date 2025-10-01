@@ -9,6 +9,7 @@ use Filament\Notifications\Notification; // UI
 use Illuminate\Support\Facades\Mail;     // 👈 mail
 use App\Mail\SiniestroPendienteMail;     // 👈 tu mailable
 use App\Models\{Documento, Tarea, ChecklistDocumento, ChecklistTarea};
+use App\Jobs\ReenviarCorreoPeritajeJob;
 
 class EditPeritaje extends EditRecord
 {
@@ -101,7 +102,11 @@ class EditPeritaje extends EditRecord
                     foreach ($emails as $email) {
                         Mail::to($email)->queue(new SiniestroPendienteMail($siniestro));
                     }
-
+                    // ⏳ Programar reenvío (1 min en pruebas; luego addHours(24))
+                    ReenviarCorreoPeritajeJob::dispatch($siniestro->id)
+                    ->onConnection(config('queue.default')) // p.ej. "database"
+                    ->onQueue('default')
+                    ->delay(now()->addMinute());
                     // (Opcional) cambiar estado del siniestro a "en_proceso"
                     // Descomenta si quieres actualizar estado automáticamente:
                     // $siniestro->update(['status' => 'en_proceso']);

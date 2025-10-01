@@ -14,6 +14,11 @@ use Filament\Tables\Columns\{TextColumn, BadgeColumn};
 use Filament\Tables\Actions;
 use Filament\Tables\Filters;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Actions\Action;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SiniestroPendienteMail;
+use App\Jobs\ReenviarCorreoPeritajeJob;
 
 class PeritajeResource extends Resource
 {
@@ -89,24 +94,14 @@ class PeritajeResource extends Resource
 
         ]);
     }
-
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('solicitante')
-                    ->label('Solicitante')->sortable()->searchable(),
-
-                TextColumn::make('siniestro.id_interno')
-                    ->label('ID Siniestro')->sortable()->badge(),
-
-                TextColumn::make('perito.nombre')
-                    ->label('Perito')->sortable()->searchable(),
-
-                TextColumn::make('fecha_siniestro')
-                    ->label('Fecha Siniestro')->date('d/m/Y')->sortable(),
-
-                // % avance de tareas (Badge)
+                TextColumn::make('solicitante')->label('Solicitante')->sortable()->searchable(),
+                TextColumn::make('siniestro.id_interno')->label('ID Siniestro')->sortable()->badge(),
+                TextColumn::make('perito.nombre')->label('Perito')->sortable()->searchable(),
+                TextColumn::make('fecha_siniestro')->label('Fecha Siniestro')->date('d/m/Y')->sortable(),
                 BadgeColumn::make('avance_tareas')
                     ->label('Avance tareas')
                     ->getStateUsing(fn (Peritaje $record) =>
@@ -120,8 +115,6 @@ class PeritajeResource extends Resource
                         'info'    => fn ($state) => $state >= 50 && $state < 100,
                         'warning' => fn ($state) => $state < 50,
                     ]),
-
-                // % avance global (tareas + documentos) (Badge)
                 BadgeColumn::make('avance_global')
                     ->label('Avance global')
                     ->getStateUsing(function (Peritaje $record) {
@@ -140,15 +133,51 @@ class PeritajeResource extends Resource
                 Filters\Filter::make('ultimos_30_dias')
                     ->label('Últimos 30 días')
                     ->query(fn (Builder $query) => $query->whereDate('fecha_siniestro', '>=', now()->subDays(30))),
-
-                Filters\SelectFilter::make('perito_id')
-                    ->label('Perito')->relationship('perito', 'nombre'),
-
-                Filters\SelectFilter::make('siniestro_id')
-                    ->label('Siniestro')->relationship('siniestro', 'id_interno'),
+                Filters\SelectFilter::make('perito_id')->label('Perito')->relationship('perito', 'nombre'),
+                Filters\SelectFilter::make('siniestro_id')->label('Siniestro')->relationship('siniestro', 'id_interno'),
             ])
-            ->actions([ Actions\EditAction::make() ])
-            ->bulkActions([ Actions\BulkActionGroup::make([ Actions\DeleteBulkAction::make() ]) ])
+            ->actions([
+                Actions\EditAction::make(),
+
+                Action::make('iniciar')
+                    ->label('Iniciar peritaje')
+                    ->icon('heroicon-o-play')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->action(function (Peritaje $record) {
+                        $siniestro = $record->siniestro;
+
+                        if (! $siniestro || empty($siniestro->correo_contacto)) {
+                            Notification::make()
+                                ->title('No se puede iniciar')
+                                ->body('El siniestro no tiene correo de contacto.')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
+                        // 1) Enviar correo inicial
+                        Mail::to($siniestro->correo_contacto)
+                            ->send(new SiniestroPendienteMail($siniestro));
+
+                        // 2) Programar reenvío (1 min en pruebas; luego addHours(24))
+                        ReenviarCorreoPeritajeJob::dispatch($siniestro->id)
+                            ->onConnection(config('queue.default')) // p.ej. "database"
+                            ->onQueue('default')
+                            ->delay(now()->addMinute());
+
+                        Notification::make()
+                            ->title('Peritaje iniciado')
+                            ->body('Correo enviado y reenvío programado en 1 minuto.')
+                            ->success()
+                            ->send();
+                    }),
+            ])
+            ->bulkActions([
+                Actions\BulkActionGroup::make([
+                    Actions\DeleteBulkAction::make(),
+                ]),
+            ])
             ->defaultSort('fecha_siniestro', 'desc');
     }
 

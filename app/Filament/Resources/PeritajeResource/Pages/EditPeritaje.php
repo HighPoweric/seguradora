@@ -5,11 +5,11 @@ namespace App\Filament\Resources\PeritajeResource\Pages;
 use App\Filament\Resources\PeritajeResource;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Actions;
-use Filament\Notifications\Notification; // UI
-use Illuminate\Support\Facades\Mail;     // 👈 mail
-use App\Mail\SiniestroPendienteMail;     // 👈 tu mailable
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SiniestroPendienteMail;
 use App\Models\{Documento, Tarea, ChecklistDocumento, ChecklistTarea};
-use App\Jobs\ReenviarCorreoPeritajeJob;
+use App\Jobs\SiniestroNotificacionProgramada; // 👈 nuevo job
 
 class EditPeritaje extends EditRecord
 {
@@ -54,9 +54,9 @@ class EditPeritaje extends EditRecord
                 ->requiresConfirmation()
                 ->action(function () {
                     $peritaje = $this->record;
-                    $siniestro = $peritaje->siniestro; // relación BelongsTo
+                    $siniestro = $peritaje->siniestro;
 
-                    if (!$siniestro) {
+                    if (! $siniestro) {
                         Notification::make()
                             ->title('Este peritaje no tiene siniestro asociado.')
                             ->danger()
@@ -76,14 +76,14 @@ class EditPeritaje extends EditRecord
                     // ===== Destinatarios =====
                     $emails = [];
 
-                    // Asegurado (si existe y tiene email)
-                    if ($siniestro->asegurado?->email) {
+                    // Asegurado
+                    if (!empty($siniestro->asegurado?->email)) {
                         $emails[] = $siniestro->asegurado->email;
                     }
 
                     // Correos extra desde .env (separados por coma)
-                    $extra = env('SINIESTRO_ALERT_EMAILS'); // ej: mesa@empresa.cl,supervisor@empresa.cl
-                    if ($extra) {
+                    $extra = config('services.siniestros.alert_emails') ?? env('SINIESTRO_ALERT_EMAILS'); // ej: mesa@empresa.cl,supervisor@empresa.cl
+                    if (!empty($extra)) {
                         $emails = array_merge($emails, array_map('trim', explode(',', $extra)));
                     }
 
@@ -98,22 +98,36 @@ class EditPeritaje extends EditRecord
                         return;
                     }
 
-                    // Envío (tu mailable implementa ShouldQueue → usamos queue)
+                    // 1) Envío inicial
                     foreach ($emails as $email) {
                         Mail::to($email)->queue(new SiniestroPendienteMail($siniestro));
                     }
-                    // ⏳ Programar reenvío (1 min en pruebas; luego addHours(24))
-                    ReenviarCorreoPeritajeJob::dispatch($siniestro->id)
-                    ->onConnection(config('queue.default')) // p.ej. "database"
-                    ->onQueue('default')
-                    ->delay(now()->addMinute());
-                    // (Opcional) cambiar estado del siniestro a "en_proceso"
-                    // Descomenta si quieres actualizar estado automáticamente:
-                    // $siniestro->update(['status' => 'en_proceso']);
+
+                    // 2) Programar recordatorios día 1, 3, 5
+                    SiniestroNotificacionProgramada::dispatch($siniestro->id, 'recordatorio')
+                        ->afterCommit()->onConnection(config('queue.default'))->onQueue('default')
+                        ->delay(now()->addMinutes(1));
+                        //->delay(now()->addDays(1));
+
+                    SiniestroNotificacionProgramada::dispatch($siniestro->id, 'recordatorio')
+                        ->afterCommit()->onConnection(config('queue.default'))->onQueue('default')
+                        ->delay(now()->addMinutes(2));
+                        //->delay(now()->addDays(3));
+
+                    SiniestroNotificacionProgramada::dispatch($siniestro->id, 'recordatorio')
+                        ->afterCommit()->onConnection(config('queue.default'))->onQueue('default')
+                        ->delay(now()->addMinutes(3));
+                        //->delay(now()->addDays(5));
+
+                    // 3) Programar cierre por colaboración día 6
+                    SiniestroNotificacionProgramada::dispatch($siniestro->id, 'cierre')
+                        ->afterCommit()->onConnection(config('queue.default'))->onQueue('default')
+                        ->delay(now()->addMinutes(4));
+                        //->delay(now()->addDays(6));
 
                     Notification::make()
                         ->title('Peritaje iniciado')
-                        ->body('Se envió el correo porque el siniestro está en estado PENDIENTE.')
+                        ->body('Correo inicial enviado y recordatorios/cierre programados.')
                         ->success()
                         ->send();
                 }),

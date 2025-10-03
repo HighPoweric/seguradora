@@ -16,7 +16,7 @@ class Perito extends Model
 
     public function peritajes(): HasMany
     {
-        return $this->hasMany(Peritaje::class, 'peritor_id');
+        return $this->hasMany(Peritaje::class, 'perito_id');
     }
 
     public function getNombreCompletoAttribute(): string

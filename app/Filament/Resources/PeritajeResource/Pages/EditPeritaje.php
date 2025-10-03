@@ -7,9 +7,11 @@ use Filament\Resources\Pages\EditRecord;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+
 use App\Mail\SiniestroPendienteMail;
 use App\Models\{Documento, Tarea, ChecklistDocumento, ChecklistTarea};
-use App\Jobs\SiniestroNotificacionProgramada; // 👈 nuevo job
+use App\Jobs\{SiniestroNotificacionProgramada, SiniestroAutoCompletar};
 
 class EditPeritaje extends EditRecord
 {
@@ -18,10 +20,11 @@ class EditPeritaje extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            // --- Botón existente ---
+            // --- Botón: Sincronizar checklist (se oculta si ya está iniciado) ---
             Actions\Action::make('syncChecklist')
                 ->label('Sincronizar checklist')
                 ->icon('heroicon-o-arrow-path')
+                ->hidden(fn () => filled($this->record?->iniciado_at))
                 ->requiresConfirmation()
                 ->action(function () {
                     $p = $this->record;
@@ -46,15 +49,21 @@ class EditPeritaje extends EditRecord
                         ->send();
                 }),
 
-            // --- Nuevo botón: Iniciar peritaje ---
+            // --- Botón: Iniciar peritaje (dinámico según iniciado_at) ---
             Actions\Action::make('iniciarPeritaje')
-                ->label('Iniciar peritaje')
-                ->icon('heroicon-o-play')
-                ->color('success')
+                ->label(fn () => filled($this->record?->iniciado_at) ? 'Peritaje activo' : 'Iniciar peritaje')
+                ->icon(fn () => filled($this->record?->iniciado_at) ? 'heroicon-o-check-circle' : 'heroicon-o-play')
+                ->color(fn () => filled($this->record?->iniciado_at) ? 'gray' : 'success')
+                ->disabled(fn () => filled($this->record?->iniciado_at))
                 ->requiresConfirmation()
                 ->action(function () {
                     $peritaje = $this->record;
                     $siniestro = $peritaje->siniestro;
+
+                    if (filled($peritaje->iniciado_at)) {
+                        Notification::make()->title('El peritaje ya está activo.')->success()->send();
+                        return;
+                    }
 
                     if (! $siniestro) {
                         Notification::make()
@@ -74,62 +83,89 @@ class EditPeritaje extends EditRecord
                     }
 
                     // ===== Destinatarios =====
-                    $emails = [];
-
-                    // Asegurado
-                    if (!empty($siniestro->asegurado?->email)) {
-                        $emails[] = $siniestro->asegurado->email;
+                    $to = null;
+                    if (filter_var($siniestro->asegurado?->email, FILTER_VALIDATE_EMAIL)) {
+                        $to = $siniestro->asegurado->email;
+                    }
+                    if (! $to && filter_var($siniestro->correo_contacto, FILTER_VALIDATE_EMAIL)) {
+                        $to = $siniestro->correo_contacto;
                     }
 
-                    // Correos extra desde .env (separados por coma)
-                    $extra = config('services.siniestros.alert_emails') ?? env('SINIESTRO_ALERT_EMAILS'); // ej: mesa@empresa.cl,supervisor@empresa.cl
+                    $cc = [];
+                    if (filter_var($peritaje->perito?->email, FILTER_VALIDATE_EMAIL)) {
+                        $cc[] = $peritaje->perito->email;
+                    }
+
+                    $bcc = [];
+                    $extra = config('services.siniestros.alert_emails') ?? env('SINIESTRO_ALERT_EMAILS');
                     if (!empty($extra)) {
-                        $emails = array_merge($emails, array_map('trim', explode(',', $extra)));
+                        $extras = array_map('trim', explode(',', $extra));
+                        $validos = array_filter($extras, fn ($e) => filter_var($e, FILTER_VALIDATE_EMAIL));
+                        $bcc = array_values(array_unique($validos));
                     }
 
-                    $emails = array_values(array_filter(array_unique($emails)));
-
-                    if (empty($emails)) {
+                    if (! $to) {
                         Notification::make()
-                            ->title('No hay destinatarios configurados.')
-                            ->body('Configura SINIESTRO_ALERT_EMAILS en .env o agrega email del asegurado.')
+                            ->title('No hay destinatario principal (To).')
+                            ->body('Agrega email del asegurado o correo_contacto para enviar la notificación.')
                             ->danger()
                             ->send();
                         return;
                     }
 
-                    // 1) Envío inicial
-                    foreach ($emails as $email) {
-                        Mail::to($email)->queue(new SiniestroPendienteMail($siniestro));
+                    try {
+                        // (1) Envío inicial: To + CC + BCC
+                        Mail::to($to)->cc($cc)->bcc($bcc)->queue(new SiniestroPendienteMail($siniestro));
+
+                        Log::info('Correo inicial enviado', [
+                            'siniestro_id' => $siniestro->id,
+                            'to'  => $to,
+                            'cc'  => $cc,
+                            'bcc' => $bcc,
+                        ]);
+
+                        // (2) Programar recordatorios
+                        SiniestroNotificacionProgramada::dispatch($siniestro->id, 'recordatorio')
+                            ->afterCommit()->onConnection(config('queue.default'))->onQueue('default')
+                            ->delay(now()->addDays(1));
+
+                        SiniestroNotificacionProgramada::dispatch($siniestro->id, 'recordatorio')
+                            ->afterCommit()->onConnection(config('queue.default'))->onQueue('default')
+                            ->delay(now()->addDays(3));
+
+                        SiniestroNotificacionProgramada::dispatch($siniestro->id, 'recordatorio')
+                            ->afterCommit()->onConnection(config('queue.default'))->onQueue('default')
+                            ->delay(now()->addDays(5));
+
+                        // (3) Programar cierre automático
+                        SiniestroAutoCompletar::dispatch($siniestro->id)
+                            ->afterCommit()->onConnection(config('queue.default'))->onQueue('default')
+                            ->delay(now()->addDays(6));
+
+                        // (4) Marcar como iniciado
+                        $peritaje->forceFill(['iniciado_at' => now()])->save();
+
+                        Notification::make()
+                            ->title('Peritaje iniciado')
+                            ->body('Correo inicial enviado y recordatorios/cierre programados.')
+                            ->success()
+                            ->send();
+
+                        // refrescar para ver el cambio del botón
+                        $this->dispatch('refresh');
+
+                    } catch (\Throwable $e) {
+                        Log::error('Error al enviar correo inicial de siniestro', [
+                            'siniestro_id' => $siniestro->id,
+                            'error' => $e->getMessage(),
+                        ]);
+
+                        Notification::make()
+                            ->title('Error al enviar el correo inicial')
+                            ->body($e->getMessage())
+                            ->danger()
+                            ->send();
                     }
-
-                    // 2) Programar recordatorios día 1, 3, 5
-                    SiniestroNotificacionProgramada::dispatch($siniestro->id, 'recordatorio')
-                        ->afterCommit()->onConnection(config('queue.default'))->onQueue('default')
-                        ->delay(now()->addMinutes(1));
-                        //->delay(now()->addDays(1));
-
-                    SiniestroNotificacionProgramada::dispatch($siniestro->id, 'recordatorio')
-                        ->afterCommit()->onConnection(config('queue.default'))->onQueue('default')
-                        ->delay(now()->addMinutes(2));
-                        //->delay(now()->addDays(3));
-
-                    SiniestroNotificacionProgramada::dispatch($siniestro->id, 'recordatorio')
-                        ->afterCommit()->onConnection(config('queue.default'))->onQueue('default')
-                        ->delay(now()->addMinutes(3));
-                        //->delay(now()->addDays(5));
-
-                    // 3) Programar cierre por colaboración día 6
-                    SiniestroNotificacionProgramada::dispatch($siniestro->id, 'cierre')
-                        ->afterCommit()->onConnection(config('queue.default'))->onQueue('default')
-                        ->delay(now()->addMinutes(4));
-                        //->delay(now()->addDays(6));
-
-                    Notification::make()
-                        ->title('Peritaje iniciado')
-                        ->body('Correo inicial enviado y recordatorios/cierre programados.')
-                        ->success()
-                        ->send();
                 }),
         ];
     }

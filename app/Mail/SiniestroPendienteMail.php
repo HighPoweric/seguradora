@@ -17,7 +17,6 @@ class SiniestroPendienteMail extends Mailable implements ShouldQueue
     {
         $this->siniestro->loadMissing([
             'asegurado', 'denunciante', 'conductor', 'contratante', 'vehiculo',
-            // 'peritaje.documentos'  // <- QUITAR esto
         ]);
     }
 
@@ -26,34 +25,44 @@ class SiniestroPendienteMail extends Mailable implements ShouldQueue
         $nro  = (string) ($this->siniestro->id_interno ?? $this->siniestro->id);
         $aseg = (string) ($this->siniestro->aseguradora ?: 'Aseguradora');
 
-        // Nombre + apellido (ajusta a tus campos reales)
-        $destinatario = trim(
-            ($this->siniestro->asegurado->nombre ?? '') . ' ' .
-            ($this->siniestro->asegurado->apellido ?? '')
-        ) ?: ($this->siniestro->asegurado->nombre ?? 'participante');
+        // ✅ null-safe en asegurado
+        $nombre   = $this->siniestro->asegurado?->nombre ?? '';
+        $apellido = $this->siniestro->asegurado?->apellido ?? '';
+        $destinatario = trim($nombre.' '.$apellido) ?: ($nombre ?: 'participante');
 
-        // Busca el peritaje más reciente del siniestro y carga sus documentos
-        $peritaje = Peritaje::with(['documentos' => function ($q) {
-                $q->orderBy('nombre');
-            }])
+        // Peritaje más reciente con documentos y perito
+        $peritaje = Peritaje::with([
+                'documentos' => fn($q) => $q->orderBy('nombre'),
+                'perito',
+            ])
             ->where('siniestro_id', $this->siniestro->id)
             ->latest()
             ->first();
 
+        // Siempre colección
         $documentos = $peritaje
             ? $peritaje->documentos()->wherePivot('requerido', true)->get()
             : collect();
 
         $urlDetalle = url("/admin/siniestros/{$this->siniestro->id}/edit");
 
-        return $this
+        $mail = $this
             ->subject("LIQUIDACIÓN SINIESTRO {$nro} {$aseg}")
+            // Asegúrate de que esta ruta de vista exista (emails/siniestros/pendiente.blade.php)
             ->markdown('emails.siniestros.pendiente', [
                 'nro'          => $nro,
                 'aseguradora'  => $aseg,
                 'destinatario' => $destinatario,
                 'documentos'   => $documentos,
                 'urlDetalle'   => $urlDetalle,
+                'perito'       => $peritaje?->perito,
             ]);
+
+        // CC automático al perito si existe y es válido
+        if ($peritaje?->perito && filter_var($peritaje->perito->email, FILTER_VALIDATE_EMAIL)) {
+            $mail->cc($peritaje->perito->email, $peritaje->perito->nombreCompleto);
+        }
+
+        return $mail;
     }
 }

@@ -52,7 +52,7 @@ class ChecklistDocumentoResource extends Resource
 
             FileUpload::make('archivo')
                 ->label('Archivo')
-                ->directory('peritajes/documentos')
+                ->directory(fn ($record) => 'peritajes/documentos/' . ($record->peritaje_id))
                 ->preserveFilenames()
                 ->openable()
                 ->downloadable(),

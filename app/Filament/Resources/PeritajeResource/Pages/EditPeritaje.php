@@ -8,6 +8,7 @@ use Filament\Actions;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use App\Services\InformeService;
 
 use App\Mail\SiniestroPendienteMail;
 use App\Models\{Documento, Tarea, ChecklistDocumento, ChecklistTarea};
@@ -166,6 +167,15 @@ class EditPeritaje extends EditRecord
                             ->danger()
                             ->send();
                     }
+                }),
+            // Boton para generar informe usando el InformeService
+            Actions\Action::make('generarInforme')
+                ->label('Generar Informe')
+                ->icon('heroicon-o-document-text')
+                ->color('success')
+                ->action(function () {
+                    $informeService = app(InformeService::class);
+                    return response()->download($informeService->generarInformePeritaje($this->record->id))->deleteFileAfterSend(true);
                 }),
         ];
     }

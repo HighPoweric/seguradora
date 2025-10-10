@@ -31,6 +31,10 @@ class Siniestro extends Model
 
     ];
 
+    protected $casts = [
+        'fecha_siniestro' => 'date',
+    ];
+
     public function vehiculo()
     {
         return $this->belongsTo(Vehiculo::class);

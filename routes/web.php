@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ParticipanteController;
+use App\Http\Controllers\InformeController;
 
 
 Route::get('/', function () {
@@ -59,6 +60,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/configuracion', function () {
         return view('configuracion.index');
     })->name('configuracion.index');
+
+    Route::get('/informes/generar/{peritaje}', [InformeController::class, 'generarInforme'])
+    ->name('informes.generar');
 });
 
 // Si necesitas rutas con parámetros o recursos:

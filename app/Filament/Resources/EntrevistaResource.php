@@ -22,8 +22,11 @@ class EntrevistaResource extends Resource
             Select::make('peritaje_id')
                 ->label('Peritaje')
                 ->relationship('peritaje', 'id')
-                ->searchable()
-                ->required(),
+                ->searchable()->preload()
+                ->required()
+                ->getOptionLabelFromRecordUsing(
+                    fn ($record) => "{$record->siniestro->id_interno} - Asegurado: {$record->siniestro->asegurado->nombre} {$record->siniestro->asegurado->apellido}"
+                ),
 
             Select::make('participante_id')
                 ->label('Participante')

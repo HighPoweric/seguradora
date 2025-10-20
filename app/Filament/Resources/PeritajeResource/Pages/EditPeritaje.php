@@ -175,7 +175,7 @@ class EditPeritaje extends EditRecord
                 ->color('success')
                 ->action(function () {
                     $informeService = app(InformeService::class);
-                    return response()->download($informeService->generarInformePeritaje($this->record->id))->deleteFileAfterSend(true);
+                    return response()->download($informeService->generarInformePeritaje($this->record->id));
                 }),
         ];
     }

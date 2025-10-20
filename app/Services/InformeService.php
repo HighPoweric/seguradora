@@ -38,7 +38,7 @@ class InformeService
 
         // Generar nombre del archivo
         $fileName = 'Informe_Siniestro_' . $siniestro->id_interno . '_' . now()->format('Ymd') . '.docx';
-        $filePath = storage_path('app/peritajes/informe/' . $peritajeId . '/' . $fileName);
+        $filePath = storage_path('app/private/peritajes/' . $peritajeId . '/informe/' . $fileName);
 
         // Crear el directorio si no existe
         if (!file_exists(dirname($filePath))) {

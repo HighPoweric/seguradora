@@ -8,8 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Entrevista extends Model
 {
     protected $fillable = [
-        'peritaje_id',
-        'participante_id',
+        'participante_siniestro_id',
         'perito_id',
         'fecha_entrevista',
         'archivo_audio',
@@ -18,19 +17,11 @@ class Entrevista extends Model
     ];
 
     /**
-     * Relación con el modelo Peritaje.
+     * Relación con el modelo ParticipanteSiniestro.
      */
-    public function peritaje(): BelongsTo
+    public function participanteSiniestro(): BelongsTo
     {
-        return $this->belongsTo(Peritaje::class);
-    }
-
-    /**
-     * Relación con el modelo Participante.
-     */
-    public function participante(): BelongsTo
-    {
-        return $this->belongsTo(Participante::class);
+        return $this->belongsTo(ParticipanteSiniestro::class);
     }
 
     /**

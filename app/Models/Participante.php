@@ -83,13 +83,23 @@ class Participante extends Model
     // Si deseas agregar atributos virtuales como "nombre_completo"
     protected $appends = ['nombre_completo'];
 
-    /**
-     * Relación con peritajes (si corresponde)
-     * Este método puedes eliminarlo si no usas esta relación
-     */
-    public function peritajes(): HasMany
+    //agregamos relacion n:n con siniestros a traves de la tabla pivote participante_siniestro
+    public function siniestros()
     {
-        return $this->hasMany(Peritaje::class, 'participante_id');
+        return $this->belongsToMany(Siniestro::class, 'participante_siniestro')
+            ->withTimestamps();
+    }
+    
+    //agregamos la relacion con Entrevistas
+    public function entrevistas(): HasMany
+    {
+        return $this->hasMany(Entrevista::class);
+    }
+
+    //agregamos relacion con la pivot participante_siniestro
+    public function participanteSiniestros(): HasMany
+    {
+        return $this->hasMany(ParticipanteSiniestro::class);
     }
 
     /**
@@ -99,6 +109,12 @@ class Participante extends Model
     public function getNombreCompletoAttribute(): string
     {
         return "{$this->nombre} {$this->apellido}";
+    }
+
+    //nombre completo mas Rut-dv
+    public function getNombreCompletoRutAttribute() : string
+    {
+        return "{$this->nombre} {$this->apellido} ({$this->rut}-{$this->dv})";
     }
 
     /**

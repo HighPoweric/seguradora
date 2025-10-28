@@ -19,6 +19,12 @@ class Perito extends Model
         return $this->hasMany(Peritaje::class, 'perito_id');
     }
 
+    //agregamos la relacion con Entrevistas
+    public function entrevistas(): HasMany
+    {
+        return $this->hasMany(Entrevista::class);
+    }
+
     public function getNombreCompletoAttribute(): string
     {
         return "{$this->nombre} {$this->apellido}";

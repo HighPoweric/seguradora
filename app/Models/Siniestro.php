@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Siniestro extends Model
 {
@@ -17,11 +18,6 @@ class Siniestro extends Model
         'alcolemia_realizada',
         'vehiculo_inmovilizado',
         'vehiculo_id',
-        'asegurado_id',
-        'denunciante_id',
-        'conductor_id',
-        'contratante_id',
-        'relacion_asegurado_conductor',
         'direccion_informada',
         'direccion_aproximada',
         'latitud',
@@ -39,24 +35,23 @@ class Siniestro extends Model
     {
         return $this->belongsTo(Vehiculo::class);
     }
-
-    public function asegurado()
+    
+    public function participantes()
     {
-        return $this->belongsTo(Participante::class, 'asegurado_id');
+        return $this->belongsToMany(Participante::class, 'participante_siniestro')
+            ->withPivot('asegurado', 'conductor', 'contratante', 'denunciante', 'otro_rol')
+            ->withTimestamps();
     }
 
-    public function denunciante()
+    //agregamos relacion con la pivot participante_siniestro
+    public function participanteSiniestros()
     {
-        return $this->belongsTo(Participante::class, 'denunciante_id');
+        return $this->hasMany(ParticipanteSiniestro::class);
     }
 
-    public function conductor()
+    //agregamos la relacion con Entrevistas
+    public function entrevistas(): HasMany
     {
-        return $this->belongsTo(Participante::class, 'conductor_id');
-    }
-
-    public function contratante()
-    {
-        return $this->belongsTo(Participante::class, 'contratante_id');
+        return $this->hasMany(Entrevista::class);
     }
 }

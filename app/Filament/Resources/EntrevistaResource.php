@@ -4,11 +4,19 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\EntrevistaResource\Pages;
 use App\Models\Entrevista;
+use App\Models\Siniestro;
+use App\Models\ParticipanteSiniestro;
+use App\Models\Perito;
 use Filament\Forms;
-use Filament\Forms\Components\{Select, DateTimePicker, FileUpload, Textarea};
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Columns\{TextColumn, BadgeColumn};
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\BadgeColumn;
 
 class EntrevistaResource extends Resource
 {
@@ -19,24 +27,35 @@ class EntrevistaResource extends Resource
     public static function form(Forms\Form $form): Forms\Form
     {
         return $form->schema([
-            Select::make('peritaje_id')
-                ->label('Peritaje')
-                ->relationship('peritaje', 'id')
-                ->searchable()->preload()
-                ->required()
-                ->getOptionLabelFromRecordUsing(
-                    fn ($record) => "{$record->siniestro->id_interno} - Asegurado: {$record->siniestro->asegurado->nombre} {$record->siniestro->asegurado->apellido}"
-                ),
-
-            Select::make('participante_id')
-                ->label('Participante')
-                ->relationship('participante', 'nombre')
+            // Selecionar o siniestro (apenas na criação)
+            Select::make('siniestro_id')
+                ->label('Siniestro')
+                ->options(Siniestro::all()->pluck('id_interno', 'id'))
                 ->searchable()
-                ->required(),
+                ->required()
+                ->reactive()
+                ->visible(fn ($context) => $context === 'create'),
+
+            // Selecionar participante vinculado ao siniestro
+            Select::make('participante_siniestro_id')
+                ->label('Participante')
+                ->options(function ($get) {
+                    $siniestroId = $get('siniestro_id');
+                    if (!$siniestroId) return [];
+                    return ParticipanteSiniestro::where('siniestro_id', $siniestroId)
+                        ->with('participante')
+                        ->get()
+                        ->mapWithKeys(fn($ps) => [
+                            $ps->id => $ps->participante->nombre . ' ' . $ps->participante->apellido . ' (' . $ps->participante->rut . '-' . $ps->participante->dv . ')'
+                        ]);
+                })
+                ->searchable()
+                ->required()
+                ->reactive(),
 
             Select::make('perito_id')
                 ->label('Perito')
-                ->relationship('perito', 'nombre')
+                ->options(Perito::all()->pluck('nombre', 'id'))
                 ->searchable()
                 ->nullable(),
 
@@ -69,9 +88,15 @@ class EntrevistaResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('peritaje.id')->label('Peritaje')->sortable(),
-                TextColumn::make('participante.nombre')->label('Participante')->searchable()->sortable(),
-                TextColumn::make('perito.nombre')->label('Perito')->searchable()->sortable(),
+                TextColumn::make('participanteSiniestro.participante.nombre_completo_rut')
+                    ->label('Participante')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('participanteSiniestro.siniestro.id_interno')
+                    ->label('Siniestro')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('perito.nombre')->label('Perito')->sortable()->searchable(),
                 TextColumn::make('fecha_entrevista')->label('Fecha de Entrevista')->dateTime('d/m/Y H:i')->sortable(),
                 BadgeColumn::make('estado')
                     ->label('Estado')
@@ -82,22 +107,6 @@ class EntrevistaResource extends Resource
                         'success' => 'completada',
                     ])
                     ->sortable(),
-            ])
-            ->filters([
-                Tables\Filters\SelectFilter::make('estado')
-                    ->label('Estado')
-                    ->options([
-                        'no iniciada' => 'No Iniciada',
-                        'aguardando agenda' => 'Aguardando Agenda',
-                        'agendada' => 'Agendada',
-                        'completada' => 'Completada',
-                    ]),
-                Tables\Filters\SelectFilter::make('peritaje_id')
-                    ->relationship('peritaje', 'id')
-                    ->label('Peritaje'),
-                Tables\Filters\SelectFilter::make('participante_id')
-                    ->relationship('participante', 'nombre')
-                    ->label('Participante'),
             ]);
     }
 
